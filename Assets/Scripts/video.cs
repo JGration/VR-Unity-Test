@@ -29,22 +29,12 @@ public class video : MonoBehaviour
         if (videoIsDownloaded)
         {
             //caso esteja baixado, o vp recebe o caminho do arquivo
-            vp.url = videoSavePath;
-            vp.playOnAwake = false;
-            vp.isLooping = true;
-            vp.renderMode = UnityEngine.Video.VideoRenderMode.MaterialOverride;
-            vp.targetMaterialRenderer = GetComponent<Renderer>();
-            vp.targetMaterialProperty = "_MainTex";
+            StartVideo();
         }
         else
         {
             //o vp recebe o url, baixa e executa o video
-            vp.url = www.url;
-            vp.playOnAwake = false;
-            vp.isLooping = true;
-            vp.renderMode = UnityEngine.Video.VideoRenderMode.MaterialOverride;
-            vp.targetMaterialRenderer = GetComponent<Renderer>();
-            vp.targetMaterialProperty = "_MainTex";
+            StartVideoFromURL();
             //as funcoes de pausar ou continuar o video estao em DefaultTrackableEventHandler.cs, script do gameobject ImageTarget
         }
     }
@@ -85,6 +75,17 @@ public class video : MonoBehaviour
         else
         {
             Debug.Log("Download saved to: " + videoSavePath.Replace("/", "\\") + "\r\n" + www.error);
+            var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+            try
+            {
+
+                StartVideo();
+            }
+            catch
+            {
+                StartVideoFromURL();
+            }
+            
         }
     }
     #endregion
@@ -107,6 +108,30 @@ public class video : MonoBehaviour
                 StartCoroutine(GetVideo());
             }
         }
+    }
+    #endregion
+
+    #region OUTSIDEMETHODS
+    void StartVideo()
+    {
+        var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+        vp.url = videoSavePath;
+        vp.playOnAwake = false;
+        vp.isLooping = true;
+        vp.renderMode = UnityEngine.Video.VideoRenderMode.MaterialOverride;
+        vp.targetMaterialRenderer = GetComponent<Renderer>();
+        vp.targetMaterialProperty = "_MainTex";
+    }
+
+    void StartVideoFromURL()
+    {
+        var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+        vp.url = www.url;
+        vp.playOnAwake = false;
+        vp.isLooping = true;
+        vp.renderMode = UnityEngine.Video.VideoRenderMode.MaterialOverride;
+        vp.targetMaterialRenderer = GetComponent<Renderer>();
+        vp.targetMaterialProperty = "_MainTex";
     }
     #endregion
 }
