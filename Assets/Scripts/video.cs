@@ -12,9 +12,11 @@ public class video : MonoBehaviour
     public GameObject loading;
     public GameObject downloadFail;
     [SerializeField]
-    private bool videoIsDownloaded;
+    public static bool videoDownloaded;
     [SerializeField]
     private string videoSavePath;
+    private UnityEngine.Video.VideoPlayer vp;
+    string pressao;
 
     //public float progress;
     #endregion
@@ -23,10 +25,10 @@ public class video : MonoBehaviour
     void Start()
     {
         //Variavel vp controlara o componente de videoplayer
-        var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+        vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
         StartCoroutine(GetVideo());
         downloadFail.SetActive(false);
-        if (videoIsDownloaded)
+        if (videoDownloaded)
         {
             //caso esteja baixado, o vp recebe o caminho do arquivo
             StartVideo();
@@ -55,7 +57,7 @@ public class video : MonoBehaviour
         if (!Directory.Exists(Path.GetDirectoryName(videoSavePath)))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(videoSavePath));
-            videoIsDownloaded = true;
+            videoDownloaded = true;
         }
         //HTTP GET
         www.method = UnityWebRequest.kHttpVerbGET;
@@ -101,11 +103,48 @@ public class video : MonoBehaviour
         if(downloadFail.activeInHierarchy)
         {
             //Depois do timeout da corotina, o usuario podera apertar/clicar em cima para reiniciar a tentativa.
-            if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
+            if (Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Began || Input.GetMouseButtonDown(0))
             {
-                downloadFail.SetActive(false);
-                StopAllCoroutines();
-                StartCoroutine(GetVideo());
+                //PARA TESTAR NO COMPUTADOR, DESCOMENTAR A SEGUNDA LINHA ABAIXO E COMENTAR A PRIMEIRA LINHA ABAIXO
+                Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+                //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit Hit;
+                if (Physics.Raycast(ray, out Hit))
+                {
+                    pressao = Hit.transform.name;
+                    switch (pressao)
+                    {
+                        case "Quad":
+                            downloadFail.SetActive(false);
+                            StopAllCoroutines();
+                            StartCoroutine(GetVideo());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        if(Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Began || Input.GetMouseButtonDown(0))
+        {
+            //PARA TESTAR NO COMPUTADOR, DESCOMENTAR A SEGUNDA LINHA ABAIXO E COMENTAR A PRIMEIRA LINHA ABAIXO
+            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+            //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit Hit;
+            if(Physics.Raycast(ray, out Hit))
+            {
+                pressao = Hit.transform.name;
+                switch(pressao)
+                {
+                    case "Quad":
+                        if (vp.isPlaying)
+                            vp.Pause();
+                        else
+                            vp.Play();
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -114,7 +153,7 @@ public class video : MonoBehaviour
     #region OUTSIDEMETHODS
     void StartVideo()
     {
-        var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+        vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
         vp.url = videoSavePath;
         vp.playOnAwake = false;
         vp.isLooping = true;
@@ -125,7 +164,7 @@ public class video : MonoBehaviour
 
     void StartVideoFromURL()
     {
-        var vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
+        vp = gameObject.GetComponent<UnityEngine.Video.VideoPlayer>();
         vp.url = www.url;
         vp.playOnAwake = false;
         vp.isLooping = true;
